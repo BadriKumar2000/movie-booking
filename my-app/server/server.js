@@ -9,33 +9,7 @@ const db = new sqlite3.Database(
   }
 );
 let sql;
-// Creating a table user
-// let sql =
-//   "CREATE TABLE user(id INTEGER PRIMARY KEY,first_name,last_name,username,password,email)";
-// db.run(sql);
-
-// db.run("DROP TABLE user");
-// Inserting data into table user
-// sql =
-//   "INSERT INTO user(first_name,last_name,username,password,email)VALUES(?,?,?,?,?)";
-// db.run(
-//   sql,
-//   ["badrikumar", "gudisha", "badri", "gudishabadri", "badri@gmail.com"],
-//   (error) => {
-//     if (error) return console.error(error.message);
-//   }
-// );
-
-sql = "SELECT * FROM user";
-db.all(sql, [], (error, rows) => {
-  if (error) return console.error(error.message);
-  rows.forEach((row) => {
-    console.log(row);
-  });
-});
-
 const app = express();
-
 app.use(cors());
 
 const initializeDBAndServer = () => {
@@ -51,10 +25,39 @@ const initializeDBAndServer = () => {
 
 initializeDBAndServer();
 
-app.get("/api", (request, response) => {
-  response.send([
-    { userName: "badri", id: 1 },
-    { userName: "moulali", id: 2 },
-    { userName: "giribabu", id: 3 },
-  ]);
+// sql =
+//   "CREATE TABLE MovieTickets(TicketID INTEGER PRIMARY KEY,RowNumber TEXT,MovieName TEXT NOT NULL,Showtime DATETIME NOT NULL,SeatNumber TEXT NOT NULL);";
+// db.run(sql);
+
+// Define common values for movie name and showtime
+const movieName = "Leo";
+const showtime = "6:00 pm";
+
+// Function to convert a number to an alphabetic representation
+function numberToAlphabet(num) {
+  const base = "A".charCodeAt(0);
+  let result = "";
+  while (num > 0) {
+    const remainder = (num - 1) % 26;
+    result = String.fromCharCode(base + remainder) + result;
+    num = Math.floor((num - 1) / 26);
+  }
+  return result;
+}
+
+// Insert up to 15 rows with alphabetic RowNumber, each with 40 seats
+db.serialize(() => {
+  for (let rowNumber = 1; rowNumber <= 15; rowNumber++) {
+    const alphabeticRowNumber = numberToAlphabet(rowNumber);
+    for (let seatNumber = 1; seatNumber <= 40; seatNumber++) {
+      const seatLabel = `Row ${alphabeticRowNumber} Seat ${seatNumber}`;
+      db.run(
+        "INSERT INTO MovieTickets (RowNumber, MovieName, Showtime, SeatNumber) VALUES (?, ?, ?, ?)",
+        [alphabeticRowNumber, movieName, showtime, seatLabel]
+      );
+    }
+  }
 });
+
+// Close the database connection after the inserts
+db.close();
